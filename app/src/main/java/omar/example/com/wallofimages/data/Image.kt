@@ -8,8 +8,9 @@ import androidx.room.PrimaryKey
 data class Image(
     @PrimaryKey
     val id: String,
+    val color: String,
     @Embedded
     val urls: Url
 )
 
-data class Url(val raw: String, val full: String, val regular: String)
+data class Url(val raw: String, val full: String, val regular: String, val small: String, val thumb: String)
