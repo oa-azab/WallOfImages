@@ -26,6 +26,11 @@ class ImageAdapter : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
 
     override fun onBindViewHolder(holder: ImageViewHolder, position: Int) = holder.bind(data[position])
 
+    override fun onViewRecycled(holder: ImageViewHolder) {
+        super.onViewRecycled(holder)
+        holder.itemView.imageImg.setImageBitmap(null)
+    }
+
     fun swapData(data: List<Image>) {
         this.data = data
         notifyDataSetChanged()
@@ -34,7 +39,7 @@ class ImageAdapter : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
     class ImageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(item: Image) = with(itemView) {
             imageImg.setBackgroundColor(Color.parseColor(item.color))
-            ResourceLoader.loadResource(item.urls.small) {
+            ResourceLoader.loadResource(item.urls.regular) {
                 if (imageImg != null) {
                     imageImg.setImageBitmap(it)
                 }
