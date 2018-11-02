@@ -43,10 +43,12 @@ class ImageAdapter : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
 
         init {
             itemView.cancelLoadBtn.setOnClickListener(this)
+            itemView.retryBtn.setOnClickListener(this)
         }
 
         fun bind(item: Image) = with(itemView) {
             imageImg.setBackgroundColor(Color.parseColor(item.color))
+            loadingView.visibility = View.VISIBLE
             val id = ResourceLoader.load(item.urls.regular) {
                 when (it) {
                     is ResourceLoadSuccess -> {
@@ -57,6 +59,7 @@ class ImageAdapter : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
                     }
                     is ResourceLoadError -> {
                         loadingView.visibility = View.GONE
+                        retryBtn.visibility = View.VISIBLE
                         Log.d("ImageAdapter", "UI failed fetching resource ${it.error.message}")
                     }
                 }
@@ -68,13 +71,23 @@ class ImageAdapter : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
             val position = adapterPosition
             if (position != RecyclerView.NO_POSITION) {
                 val image = data[position]
-                Log.d("ImageAdapter", "[cancelLoadBtn] image of id ${image.id}")
-                val fetchId = image.fetchId
-                if (fetchId != null) {
-                    ResourceLoader.cancelLoad(fetchId)
-                } else {
-                    Log.d("ImageAdapter", "[cancelLoadBtn] fetchId is Null")
+                when (view?.id) {
+                    R.id.cancelLoadBtn -> cancel(image)
+                    R.id.retryBtn -> {
+                        itemView.retryBtn.visibility = View.GONE
+                        bind(image)
+                    }
                 }
+            }
+        }
+
+        private fun cancel(image: Image) {
+            Log.d("ImageAdapter", "[cancel] image of id ${image.id}")
+            val fetchId = image.fetchId
+            if (fetchId != null) {
+                ResourceLoader.cancelLoad(fetchId)
+            } else {
+                Log.d("ImageAdapter", "[cancel] fetchId is Null")
             }
         }
     }
