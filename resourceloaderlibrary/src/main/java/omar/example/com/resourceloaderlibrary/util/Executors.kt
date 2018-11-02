@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package omar.example.com.resourceloaderlibrary
+package omar.example.com.resourceloaderlibrary.util
 
+import android.os.Handler
+import android.os.Looper
 import java.util.concurrent.Executors
 
 val BACKGROUND = Executors.newFixedThreadPool(3)
+val UI = Handler(Looper.getMainLooper())
