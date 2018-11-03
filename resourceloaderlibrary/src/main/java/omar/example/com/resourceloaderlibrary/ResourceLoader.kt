@@ -1,7 +1,5 @@
 package omar.example.com.resourceloaderlibrary
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
@@ -11,7 +9,6 @@ import omar.example.com.resourceloaderlibrary.model.FetchRequest
 import omar.example.com.resourceloaderlibrary.util.BACKGROUND
 import omar.example.com.resourceloaderlibrary.util.UI
 import retrofit2.Retrofit
-import java.io.InputStream
 
 object ResourceLoader {
 
@@ -19,6 +16,8 @@ object ResourceLoader {
 
     private lateinit var cache: LruCache<String, ByteArray>
     private lateinit var service: DownloadService
+
+    // This handlerThread is responsible for queuing resource fetch requests
     private val handlerThread = HandlerThread("RequestsThread")
     private lateinit var requestsHandler: Handler
 
@@ -100,9 +99,6 @@ object ResourceLoader {
      */
     private fun download(downloadRequest: DownloadRequest) {
         BACKGROUND.execute {
-            Log.d(TAG, "[download] sleep for 5 seconds")
-            Thread.sleep(5000)
-            Log.d(TAG, "[download] wakeup for 5 seconds")
             val call = downloadRequest.call
             try {
                 val response = call.execute()
@@ -127,15 +123,6 @@ object ResourceLoader {
                 downloadResult(downloadRequest.url, ResourceLoadError(e))
             }
         }
-    }
-
-    /**
-     * Decode inputstream to bitmap
-     */
-    private fun inputStreamToBitmap(input: InputStream): Bitmap {
-        val bitmap = BitmapFactory.decodeStream(input)
-        Log.d(TAG, "[inputStreamToBitmap] bitmap size = ${bitmap.byteCount / 1024}")
-        return bitmap
     }
 
     /**

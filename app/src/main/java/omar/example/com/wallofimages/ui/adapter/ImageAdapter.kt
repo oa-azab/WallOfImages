@@ -5,6 +5,8 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.paging.PagedListAdapter
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.item_image.view.*
 import omar.example.com.resourceloaderlibrary.ResourceLoadError
@@ -13,11 +15,9 @@ import omar.example.com.resourceloaderlibrary.ResourceLoader
 import omar.example.com.resourceloaderlibrary.util.toBitmap
 import omar.example.com.wallofimages.R
 import omar.example.com.wallofimages.data.Image
-import java.util.*
 
-class ImageAdapter : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
+class ImageAdapter : PagedListAdapter<Image, ImageAdapter.ImageViewHolder>(IMAGE_COMPARATOR) {
 
-    private var data: List<Image> = ArrayList()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ImageViewHolder {
         return ImageViewHolder(
@@ -26,18 +26,11 @@ class ImageAdapter : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
         )
     }
 
-    override fun getItemCount() = data.size
-
-    override fun onBindViewHolder(holder: ImageViewHolder, position: Int) = holder.bind(data[position])
+    override fun onBindViewHolder(holder: ImageViewHolder, position: Int) = holder.bind(getItem(position)!!)
 
     override fun onViewRecycled(holder: ImageViewHolder) {
         super.onViewRecycled(holder)
         holder.itemView.imageImg.setImageBitmap(null)
-    }
-
-    fun swapData(data: List<Image>) {
-        this.data = data
-        notifyDataSetChanged()
     }
 
     inner class ImageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
@@ -71,7 +64,7 @@ class ImageAdapter : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
         override fun onClick(view: View?) {
             val position = adapterPosition
             if (position != RecyclerView.NO_POSITION) {
-                val image = data[position]
+                val image = getItem(position)!!
                 when (view?.id) {
                     R.id.cancelLoadBtn -> cancel(image)
                     R.id.retryBtn -> {
@@ -89,6 +82,18 @@ class ImageAdapter : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
                 ResourceLoader.cancelLoad(fetchId)
             } else {
                 Log.d("ImageAdapter", "[cancel] fetchId is Null")
+            }
+        }
+    }
+
+    companion object {
+        val IMAGE_COMPARATOR = object : DiffUtil.ItemCallback<Image>() {
+            override fun areItemsTheSame(p0: Image, p1: Image): Boolean {
+                return p0.id == p1.id
+            }
+
+            override fun areContentsTheSame(p0: Image, p1: Image): Boolean {
+                return p0 == p1
             }
         }
     }

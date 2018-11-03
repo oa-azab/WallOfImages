@@ -1,5 +1,6 @@
 package omar.example.com.wallofimages.data.local
 
+import androidx.paging.DataSource
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -10,7 +11,7 @@ import omar.example.com.wallofimages.data.Image
 interface ImagesDao {
 
     @Query("SELECT * FROM Image")
-    fun getAll(): List<Image>
+    fun getAll(): DataSource.Factory<Int, Image>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insert(images: List<Image>)

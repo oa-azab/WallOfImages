@@ -20,5 +20,8 @@ import android.os.Handler
 import android.os.Looper
 import java.util.concurrent.Executors
 
+// Thread pool for downloading resources
 val BACKGROUND = Executors.newFixedThreadPool(3)
+
+// Handler to post results to UI
 val UI = Handler(Looper.getMainLooper())
