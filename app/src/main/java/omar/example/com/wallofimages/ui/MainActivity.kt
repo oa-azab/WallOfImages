@@ -14,6 +14,7 @@ import androidx.paging.PagedList
 import androidx.recyclerview.widget.GridLayoutManager
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.activity_main.*
+import omar.example.com.resourceloaderlibrary.ResourceLoader
 import omar.example.com.wallofimages.R
 import omar.example.com.wallofimages.data.Image
 import omar.example.com.wallofimages.data.local.ImagesDao
@@ -33,6 +34,9 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // Init Resource loader library
+        ResourceLoader.init()
 
         // Get ViewModel
         getViewModel()

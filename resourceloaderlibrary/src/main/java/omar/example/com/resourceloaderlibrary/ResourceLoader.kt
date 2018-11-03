@@ -7,12 +7,11 @@ import android.util.LruCache
 import omar.example.com.resourceloaderlibrary.model.DownloadRequest
 import omar.example.com.resourceloaderlibrary.model.FetchRequest
 import omar.example.com.resourceloaderlibrary.util.BACKGROUND
+import omar.example.com.resourceloaderlibrary.util.Const.WEB_SERVICE_BASE_URL
 import omar.example.com.resourceloaderlibrary.util.UI
 import retrofit2.Retrofit
 
-object ResourceLoader {
-
-    private const val TAG = "ResourceLoader"
+class ResourceLoader private constructor(private val cacheMaxCapacity: Int) {
 
     private lateinit var cache: LruCache<String, ByteArray>
     private lateinit var service: DownloadService
@@ -40,9 +39,11 @@ object ResourceLoader {
         requestsHandler = Handler(handlerThread.looper)
     }
 
+    /**
+     * Setup the local cache with value entered by user or default value
+     */
     private fun setupCache() {
-        val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
-        val cacheSize = maxMemory / 8
+        val cacheSize = if (cacheMaxCapacity > defaultCacheSize()) defaultCacheSize() else cacheMaxCapacity
         cache = object : LruCache<String, ByteArray>(cacheSize) {
             override fun sizeOf(key: String, value: ByteArray): Int {
                 return value.size / 1024
@@ -53,12 +54,17 @@ object ResourceLoader {
 
     private fun setupService() {
         val retrofit = Retrofit.Builder()
-            .baseUrl("http://pastebin.com")
+            .baseUrl(WEB_SERVICE_BASE_URL)
             .build()
         service = retrofit.create(DownloadService::class.java)
     }
 
-    fun load(url: String, callback: (ResourceLoadResult<ByteArray>) -> Unit): String {
+    /**
+     * Load resource from cache if exist or from url if not exist
+     *
+     * return fetchRequestId if you want to cancel loading is resource
+     */
+    private fun load(url: String, callback: (ResourceLoadResult<ByteArray>) -> Unit): String {
         val fetchRequest = FetchRequest(url, callback)
 
         requestsHandler.post {
@@ -147,7 +153,7 @@ object ResourceLoader {
      * Cancels fetching resource by its request id
      * and cancel the downloads if no other sources requesting this resource
      */
-    fun cancelLoad(fetchRequestId: String) {
+    private fun cancelLoad(fetchRequestId: String) {
         requestsHandler.post {
             val fetchRequest = fetchRequests[fetchRequestId]
             if (fetchRequest != null) {
@@ -161,6 +167,36 @@ object ResourceLoader {
             } else {
                 Log.d(TAG, "[cancelLoad] fetchRequest is null")
             }
+        }
+    }
+
+    companion object {
+        private const val TAG = "ResourceLoader"
+        private var INSTANCE: ResourceLoader? = null
+
+        /**
+         * Initialize the library with cache size if input cache size is too high
+         * or not entered, a default cache size is provided
+         *
+         * cacheMaxCapacity: cache size in kilobytes
+         */
+        fun init(cacheMaxCapacity: Int = defaultCacheSize()) {
+            if (INSTANCE == null) {
+                INSTANCE = ResourceLoader(cacheMaxCapacity)
+            }
+        }
+
+        private fun defaultCacheSize(): Int {
+            val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
+            return maxMemory / 4
+        }
+
+        fun load(url: String, callback: (ResourceLoadResult<ByteArray>) -> Unit): String {
+            return INSTANCE?.load(url, callback) ?: throw Exception("Must call ResourceLoader.init()")
+        }
+
+        fun cancelLoad(fetchRequestId: String) {
+            INSTANCE?.cancelLoad(fetchRequestId) ?: throw Exception("Must call ResourceLoader.init()")
         }
     }
 }
