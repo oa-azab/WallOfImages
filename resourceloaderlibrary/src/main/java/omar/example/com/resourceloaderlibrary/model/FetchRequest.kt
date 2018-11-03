@@ -6,6 +6,6 @@ import java.util.*
 
 data class FetchRequest(
     val url: String,
-    val callback: (ResourceLoadResult<Bitmap>) -> Unit,
+    val callback: (ResourceLoadResult<ByteArray>) -> Unit,
     val id: String = UUID.randomUUID().toString()
 )

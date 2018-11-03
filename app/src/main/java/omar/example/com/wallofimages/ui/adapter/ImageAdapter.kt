@@ -10,6 +10,7 @@ import kotlinx.android.synthetic.main.item_image.view.*
 import omar.example.com.resourceloaderlibrary.ResourceLoadError
 import omar.example.com.resourceloaderlibrary.ResourceLoadSuccess
 import omar.example.com.resourceloaderlibrary.ResourceLoader
+import omar.example.com.resourceloaderlibrary.util.toBitmap
 import omar.example.com.wallofimages.R
 import omar.example.com.wallofimages.data.Image
 import java.util.*
@@ -54,7 +55,7 @@ class ImageAdapter : RecyclerView.Adapter<ImageAdapter.ImageViewHolder>() {
                     is ResourceLoadSuccess -> {
                         if (imageImg != null) {
                             loadingView.visibility = View.GONE
-                            imageImg.setImageBitmap(it.data)
+                            imageImg.setImageBitmap(it.data.toBitmap())
                         }
                     }
                     is ResourceLoadError -> {

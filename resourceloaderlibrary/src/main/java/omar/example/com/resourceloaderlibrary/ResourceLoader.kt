@@ -6,14 +6,10 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import android.util.LruCache
-import okhttp3.ResponseBody
 import omar.example.com.resourceloaderlibrary.model.DownloadRequest
 import omar.example.com.resourceloaderlibrary.model.FetchRequest
 import omar.example.com.resourceloaderlibrary.util.BACKGROUND
 import omar.example.com.resourceloaderlibrary.util.UI
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
 import retrofit2.Retrofit
 import java.io.InputStream
 
@@ -21,10 +17,13 @@ object ResourceLoader {
 
     private const val TAG = "ResourceLoader"
 
-    private lateinit var cache: LruCache<String, Bitmap>
+    private lateinit var cache: LruCache<String, ByteArray>
     private lateinit var service: DownloadService
     private val handlerThread = HandlerThread("RequestsThread")
     private lateinit var requestsHandler: Handler
+
+    private val currentlyDownloading: MutableMap<String, DownloadRequest> = mutableMapOf()
+    private val fetchRequests: MutableMap<String, FetchRequest> = mutableMapOf()
 
     init {
         // setup cache
@@ -45,12 +44,9 @@ object ResourceLoader {
     private fun setupCache() {
         val maxMemory = (Runtime.getRuntime().maxMemory() / 1024).toInt()
         val cacheSize = maxMemory / 8
-        cache = object : LruCache<String, Bitmap>(cacheSize) {
-
-            override fun sizeOf(key: String, bitmap: Bitmap): Int {
-                // The cache size will be measured in kilobytes rather than
-                // number of items.
-                return bitmap.byteCount / 1024
+        cache = object : LruCache<String, ByteArray>(cacheSize) {
+            override fun sizeOf(key: String, value: ByteArray): Int {
+                return value.size / 1024
             }
         }
         Log.d(TAG, "[Init] cache size = $cacheSize")
@@ -63,48 +59,7 @@ object ResourceLoader {
         service = retrofit.create(DownloadService::class.java)
     }
 
-    fun loadBitmapResource(url: String, callback: (Bitmap) -> Unit) {
-        val cachedResource = cache.get(url)
-        if (cachedResource != null) {
-            Log.d(TAG, "[loadBitmapResource] key:$url found in cache")
-            callback.invoke(cachedResource)
-            return
-        }
-
-        Log.d(TAG, "[loadBitmapResource} url= $url")
-        service.downloadResource(url).enqueue(object : Callback<ResponseBody> {
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                Log.d(TAG, "[onFailure]")
-            }
-
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                Log.d(TAG, "[onResponse]")
-                if (response.isSuccessful) {
-                    Log.d(TAG, "[onResponse] isSuccessful")
-                    val input = response.body()?.byteStream()
-                    if (input != null) saveBitmap(url, input, callback)
-                    else Log.d(TAG, "[onResponse] inputstream is null")
-                } else {
-                    Log.d(TAG, "[onResponse] Not Successful")
-                }
-            }
-
-        })
-    }
-
-    fun saveBitmap(key: String, input: InputStream, callback: (Bitmap) -> Unit) {
-        val bitmap = BitmapFactory.decodeStream(input)
-        cache.put(key, bitmap)
-        callback.invoke(bitmap)
-        Log.d(TAG, "[saveBitmap] bitmap size = ${bitmap.byteCount / 1024}")
-    }
-
-    ////////////////////////////////////////
-
-    private val currentlyDownloading: MutableMap<String, DownloadRequest> = mutableMapOf()
-    private val fetchRequests: MutableMap<String, FetchRequest> = mutableMapOf()
-
-    fun load(url: String, callback: (ResourceLoadResult<Bitmap>) -> Unit): String {
+    fun load(url: String, callback: (ResourceLoadResult<ByteArray>) -> Unit): String {
         val fetchRequest = FetchRequest(url, callback)
 
         requestsHandler.post {
@@ -154,14 +109,14 @@ object ResourceLoader {
                 if (response.isSuccessful) {
                     val input = response.body()?.byteStream()
                     if (input != null) {
-                        // transform data to bitmap
-                        val bitmap = inputStreamToBitmap(input)
+                        // transform data to byteArray
+                        val resource = input.readBytes()
 
-                        // cache bitmap
-                        cache.put(downloadRequest.url, bitmap)
+                        // cache resource
+                        cache.put(downloadRequest.url, resource)
 
                         // deliver result
-                        downloadResult(downloadRequest.url, ResourceLoadSuccess(bitmap))
+                        downloadResult(downloadRequest.url, ResourceLoadSuccess(resource))
                     } else {
                         downloadResult(downloadRequest.url, ResourceLoadError(Exception("Input stream NULL")))
                     }
@@ -188,7 +143,7 @@ object ResourceLoader {
      */
     private fun downloadResult(
         url: String,
-        resourceLoadResult: ResourceLoadResult<Bitmap>
+        resourceLoadResult: ResourceLoadResult<ByteArray>
     ) {
         requestsHandler.post {
             val downloadRequest = currentlyDownloading[url]
