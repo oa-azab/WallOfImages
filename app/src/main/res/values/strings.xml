@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">WallOfImages</string>
+    <string name="lbl_retry_btn">Retry</string>
 </resources>

@@ -51,7 +51,7 @@
                 android:id="@+id/retryBtn"
                 style="@style/Widget.MaterialComponents.Button"
                 android:layout_width="wrap_content"
-                android:text="Retry"
+                android:text="@string/lbl_retry_btn"
                 android:visibility="gone"
                 android:layout_height="wrap_content"
                 app:layout_constraintStart_toStartOf="parent"

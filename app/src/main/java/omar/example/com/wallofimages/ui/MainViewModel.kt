@@ -13,6 +13,7 @@ import omar.example.com.wallofimages.data.remote.NetworkError
 import omar.example.com.wallofimages.data.remote.NetworkSuccess
 import omar.example.com.wallofimages.data.remote.RemoteDataSource
 import omar.example.com.wallofimages.util.BACKGROUND
+import omar.example.com.wallofimages.util.Const.PAGE_SIZE
 
 class MainViewModel(private val imagesDao: ImagesDao) : ViewModel() {
 
@@ -24,7 +25,7 @@ class MainViewModel(private val imagesDao: ImagesDao) : ViewModel() {
         val factory: DataSource.Factory<Int, Image> = imagesDao.getAll()
         val config = PagedList.Config.Builder().apply {
             setEnablePlaceholders(false)
-            setPageSize(5)
+            setPageSize(PAGE_SIZE)
         }.build()
         images = LivePagedListBuilder(factory, config).build()
     }
