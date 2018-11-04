@@ -18,4 +18,5 @@ package omar.example.com.wallofimages.util
 
 import java.util.concurrent.Executors
 
+// Single thread for Database operations
 val BACKGROUND = Executors.newSingleThreadExecutor()

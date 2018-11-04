@@ -22,8 +22,8 @@ class RemoteDataSource private constructor() {
         service = retrofit.create(WebService::class.java)
     }
 
-    fun fetchImages(callback: (NetworkResult<List<Image>>) -> Unit) {
-        service.getImages().enqueue(object : Callback<List<Image>> {
+    fun fetchImages(page: Int = 1, callback: (NetworkResult<List<Image>>) -> Unit) {
+        service.getImagesFromUnsplash(page).enqueue(object : Callback<List<Image>> {
             override fun onFailure(call: Call<List<Image>>, t: Throwable) {
                 Log.d(TAG, "[onFailure]")
                 callback.invoke(NetworkError(t))

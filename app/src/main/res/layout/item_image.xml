@@ -26,9 +26,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content">
 
-            <androidx.core.widget.ContentLoadingProgressBar
-                    android:indeterminate="true"
-                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+            <TextView
+                    android:text="loading.."
                     android:id="@+id/loadingPb"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"

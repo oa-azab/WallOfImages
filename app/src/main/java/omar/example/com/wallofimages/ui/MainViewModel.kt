@@ -9,6 +9,7 @@ import androidx.paging.LivePagedListBuilder
 import androidx.paging.PagedList
 import omar.example.com.wallofimages.data.Image
 import omar.example.com.wallofimages.data.local.ImagesDao
+import omar.example.com.wallofimages.data.remote.ImagesBoundaryCallback
 import omar.example.com.wallofimages.data.remote.NetworkError
 import omar.example.com.wallofimages.data.remote.NetworkSuccess
 import omar.example.com.wallofimages.data.remote.RemoteDataSource
@@ -25,9 +26,12 @@ class MainViewModel(private val imagesDao: ImagesDao) : ViewModel() {
         val factory: DataSource.Factory<Int, Image> = imagesDao.getAll()
         val config = PagedList.Config.Builder().apply {
             setEnablePlaceholders(false)
+            setInitialLoadSizeHint(20)
             setPageSize(PAGE_SIZE)
         }.build()
-        images = LivePagedListBuilder(factory, config).build()
+        images = LivePagedListBuilder(factory, config)
+            .setBoundaryCallback(ImagesBoundaryCallback(imagesDao))
+            .build()
     }
 
     fun fetchImages() {
